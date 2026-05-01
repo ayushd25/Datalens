@@ -1,0 +1,21 @@
+# Dependencies
+node_modules/
+.pnp
+.pnp.js
+
+# Environment variables (NEVER push these)
+.env
+.env.local
+.env*.local
+
+# Next.js build output
+frontend/.next/
+frontend/out/
+
+# Production build
+frontend/build/
+dist/
+
+# Misc
+.DS_Store
+*.pem
