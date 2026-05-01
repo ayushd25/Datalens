@@ -57,7 +57,7 @@ export default function UploadPage() {
             toast.error("No valid data found in CSV");
             return;
           }
-          const cols = Object.keys(rows[0]);
+          const cols = Object.keys(rows[0] as any);
           const schema: Record<string, string> = {};
           const stats: Record<string, any> = {};
 
