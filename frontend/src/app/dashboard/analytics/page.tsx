@@ -49,7 +49,6 @@ function AnalyticsContent() {
       .finally(() => setLoadingCharts(false));
   }, [datasetId, selectedCol, chartType]);
 
-  // Initial loading state
   if (useDataStore.getState().loading) {
     return (
       <div className="p-6 flex items-center justify-center py-24">
@@ -58,7 +57,6 @@ function AnalyticsContent() {
     );
   }
 
-  // No dataset ID provided
   if (!datasetId) {
     return (
       <div className="p-6 flex flex-col items-center justify-center py-24 text-center">
@@ -72,7 +70,6 @@ function AnalyticsContent() {
     );
   }
 
-  // Error state
   if (fetchError || (!currentDataset && !useDataStore.getState().loading)) {
     return (
       <div className="p-6 flex flex-col items-center justify-center py-24 text-center">
@@ -169,7 +166,7 @@ function AnalyticsContent() {
             <ResponsiveContainer width="100%" height="100%">
               <PieChart>
                 <Pie data={pieData} cx="50%" cy="50%" innerRadius={60} outerRadius={120} paddingAngle={2} dataKey="value" label={(entry) => entry.name}>
-                  {pieData.map((_, i) => <Cell key={i} fill={COLORS[i % COLORS.length]} />)}
+                  {pieData.map((_: any, i: number) => <Cell key={i} fill={COLORS[i % COLORS.length]} />)}
                 </Pie>
                 <Tooltip contentStyle={{ background: "#1a1a1e", border: "1px solid #2a2a2e", borderRadius: 8, color: "#fafafa" }} />
               </PieChart>
