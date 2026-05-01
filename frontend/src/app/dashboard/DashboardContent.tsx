@@ -152,7 +152,7 @@ export default function DashboardContent() {
                 </thead>
                 <tbody>
                   {paginated.map((ds) => (
-                    <tr key={ds.id} className="border-b border-surface-800/50 hover:bg-surface-800/30 transition">
+                    <tr key={ds._id} className="border-b border-surface-800/50 hover:bg-surface-800/30 transition">
                       <td className="py-3 px-3">
                         <div className="flex items-center gap-2">
                           <div className="w-8 h-8 rounded-lg bg-accent/10 flex items-center justify-center flex-shrink-0">
