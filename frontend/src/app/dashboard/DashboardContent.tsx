@@ -181,6 +181,14 @@ export default function DashboardContent() {
                           <Link href={`/dashboard/insights?id=${ds._id}`} className="px-2 py-1 rounded hover:bg-surface-700 text-surface-400 hover:text-amber-400 transition text-xs">
                             Insights
                           </Link>
+                           <a 
+                            href={`/share/${ds._id}`} 
+                            target="_blank" 
+                            rel="noopener noreferrer"
+                            className="px-2 py-1 rounded hover:bg-surface-700 text-surface-400 hover:text-blue-400 transition text-xs"
+                          >
+                            Share
+                          </a>
                           <button
                             onClick={() => setDeleteTarget(ds._id)}
                             className="px-2 py-1 rounded hover:bg-surface-700 text-surface-400 hover:text-red-400 transition text-xs"

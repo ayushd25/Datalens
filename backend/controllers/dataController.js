@@ -176,6 +176,7 @@ export async function deleteDataset(req, res, next) {
   } catch (error) { next(error); }
 }
 
+// --- CHART DATA GENERATOR (WITH FORECASTING) ---
 export async function getChartData(req, res, next) {
   try {
     const { id } = req.params;
@@ -184,7 +185,6 @@ export async function getChartData(req, res, next) {
     const dataset = await Dataset.findOne({ _id: id, userId: req.user._id });
     if (!dataset) return res.status(404).json({ success: false, error: "Dataset not found" });
 
-    // Extract raw values for the selected column
     const colData = dataset.data.map(row => row[column]).filter(v => v !== "" && v != null);
     
     let histogram = null;
@@ -198,7 +198,7 @@ export async function getChartData(req, res, next) {
         const min = Math.min(...nums);
         const max = Math.max(...nums);
         const binCount = 10;
-        const binSize = (max - min) / binCount || 1; // prevent division by 0
+        const binSize = (max - min) / binCount || 1; 
         
         const bins = Array(binCount).fill(0);
         const labels = [];
@@ -211,16 +211,42 @@ export async function getChartData(req, res, next) {
         
         nums.forEach(num => {
           let binIndex = Math.floor((num - min) / binSize);
-          if (binIndex >= binCount) binIndex = binCount - 1; // handle exact max value
+          if (binIndex >= binCount) binIndex = binCount - 1; 
           bins[binIndex]++;
         });
 
         histogram = { labels, counts: bins };
+
+        // ==========================================
+        // 🔮 FUTURE PREDICTION LOGIC IS HERE!
+        // ==========================================
+        if ((chartType === 'line' || chartType === 'area') && bins.length > 5) {
+          // Simple Linear Regression on the last 5 bins
+          const recentCounts = bins.slice(-5);
+          const n = recentCounts.length;
+          let sumX = 0, sumY = 0, sumXY = 0, sumXX = 0;
+          
+          recentCounts.forEach((y, x) => { 
+            sumX += x; 
+            sumY += y; 
+            sumXY += x * y; 
+            sumXX += x * x; 
+          });
+          
+          const slope = (n * sumXY - sumX * sumY) / (n * sumXX - sumX * sumX || 1);
+          const intercept = (sumY - slope * sumX) / n;
+
+          // Predict the next 3 data points into the future
+          for (let i = 1; i <= 3; i++) {
+            const predictedY = Math.round(intercept + slope * (n - 1 + i));
+            labels.push(`Future +${i}`);
+            bins.push(predictedY > 0 ? predictedY : 0);
+          }
+        }
       }
     }
 
     // 2. Generate Category Breakdown & Pie Chart Data
-    // Find the first categorical column to use for pie/category charts
     const catColObj = dataset.columns.find(c => c.type === 'categorical');
     
     if (catColObj) {
@@ -232,16 +258,14 @@ export async function getChartData(req, res, next) {
         }
       });
       
-      // Sort descending and take top 8 for clean visualization
       const sorted = Object.entries(catCounts).sort((a, b) => b[1] - a[1]).slice(0, 8);
       categories = {
         labels: sorted.map(e => e[0]),
         counts: sorted.map(e => e[1])
       };
       
-      pie = categories; // Use same data for pie chart
+      pie = categories; 
     } else if (dataset.schema[column] === 'categorical') {
-      // Fallback: If selected column itself is categorical, use it for the pie
       const catCounts = {};
       colData.forEach(val => {
         if (val) catCounts[val] = (catCounts[val] || 0) + 1;
@@ -261,5 +285,118 @@ export async function getChartData(req, res, next) {
     });
   } catch (error) {
     next(error);
+  }
+}
+
+// --- 1. PUBLIC SHARE ENDPOINT (No auth required) ---
+export async function getPublicDataset(req, res, next) {
+  try {
+    // Only return safe, non-sensitive data
+    const dataset = await Dataset.findById(req.params.id).select('-data -userId -previousVersions');
+    if (!dataset) return res.status(404).json({ success: false, error: "Not found" });
+    res.json({ success: true, data: { dataset } });
+  } catch (error) { next(error); }
+}
+
+// --- 2. AI TEXT-TO-CHART ENDPOINT ---
+// --- 2. AI TEXT-TO-CHART ENDPOINT ---
+export async function generateAIChartConfig(req, res, next) {
+  try {
+    const { id } = req.params;
+    const promptData = req.body?.prompt;
+    
+    if (!promptData || typeof promptData !== 'string') {
+      return res.status(400).json({ success: false, error: "Prompt text is required." });
+    }
+
+    const dataset = await Dataset.findOne({ _id: id, userId: req.user._id });
+    if (!dataset) return res.status(404).json({ success: false, error: "Dataset not found" });
+
+    const aiPrompt = `You are a data visualization expert. Dataset schema: ${JSON.stringify(dataset.schema)}. Columns available: ${dataset.columns.map(c => c.name).join(', ')}. User wants: "${promptData}". 
+    Return ONLY valid JSON in this exact format, no markdown, no text: 
+    {"xAxis": "column_name", "yAxis": "column_name", "chartType": "bar"|"line"|"area"|"pie"}`;
+
+    let config = null;
+    let model = 'local-keyword-matcher'; // Default fallback
+
+    // 1. TRY GEMINI FIRST (Use user's key if set in Settings, else server default)
+    const geminiKey = req.user.apiKeyGemini || process.env.GEMINI_API_KEY;
+    if (geminiKey) {
+      try {
+        const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${geminiKey}`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ contents: [{ parts: [{ text: aiPrompt }] }] })
+        });
+
+        const result = await response.json();
+        const text = result?.candidates?.[0]?.content?.parts?.[0]?.text;
+        
+        if (text) {
+          const cleanText = text.replace(/```json/g, '').replace(/```/g, '').trim();
+          config = JSON.parse(cleanText);
+          model = 'gemini';
+        } else {
+          console.warn('Gemini returned empty text for chart generation.');
+        }
+      } catch (geminiError) {
+        console.warn('Gemini Chart failed, trying OpenRouter fallback:', geminiError.message);
+      }
+    }
+
+    // 2. FALLBACK TO OPENROUTER (If Gemini failed or no key)
+    if (!config) {
+      const openRouterKey = req.user.apiKeyOpenRouter || process.env.OPENROUTER_API_KEY;
+      if (openRouterKey) {
+        try {
+          const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+            method: "POST",
+            headers: {
+              "Authorization": `Bearer ${openRouterKey}`,
+              "Content-Type": "application/json",
+              "HTTP-Referer": process.env.FRONTEND_URL || "http://localhost:3000"
+            },
+            body: JSON.stringify({
+              model: "google/gemini-flash-1.5",
+              messages: [{ role: "user", content: aiPrompt }]
+            })
+          });
+
+          const result = await response.json();
+          const text = result?.choices?.[0]?.message?.content;
+          
+          if (text) {
+            const cleanText = text.replace(/```json/g, '').replace(/```/g, '').trim();
+            config = JSON.parse(cleanText);
+            model = 'openrouter';
+          }
+        } catch (orError) {
+          console.warn('OpenRouter Chart failed:', orError.message);
+        }
+      }
+    }
+
+    // 3. FINAL LOCAL FALLBACK (If both AI services failed or no keys configured)
+    if (!config) {
+      const numericCol = dataset.columns?.find((c) => c.type === 'numeric');
+      const catCol = dataset.columns?.find((c) => c.type === 'categorical');
+      const promptLower = promptData.toLowerCase();
+      
+      let chartType = 'bar';
+      if (promptLower.includes('line') || promptLower.includes('trend') || promptLower.includes('over time')) chartType = 'line';
+      if (promptLower.includes('area')) chartType = 'area';
+      if (promptLower.includes('pie') || promptLower.includes('distribution') || promptLower.includes('share')) chartType = 'pie';
+
+      config = {
+        xAxis: catCol?.name || dataset.columns?.[0]?.name || '',
+        yAxis: numericCol?.name || dataset.columns?.[1]?.name || '',
+        chartType: chartType
+      };
+    }
+
+    res.json({ success: true, data: { config, model } });
+  } catch (error) {
+    console.error("🔥 AI Chart Error:", error.message);
+    res.status(500).json({ success: false, error: "Failed to generate chart configuration." });
   }
 }
