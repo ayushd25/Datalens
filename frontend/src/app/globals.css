@@ -1,0 +1,110 @@
+/* Hide Next.js dev tools */
+[id="__next_build_watcher"],
+[id="__next_route_annonter"] {
+  display: none !important;
+}
+.next-dev-overlay {
+  display: none !important;
+}
+#__next-dev-toolkit {
+  display: none !important;
+}
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Space Grotesk', sans-serif;
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: #3f3f46; border-radius: 3px; }
+
+html:not(.dark) {
+  .bg-surface-950 { background-color: #f7f7f8 !important; }
+  .bg-surface-900 { background-color: #ffffff !important; }
+  .bg-surface-800 { background-color: #f4f4f5 !important; }
+  .bg-surface-700 { background-color: #e4e4e7 !important; }
+  .bg-surface-950\/80 { background-color: rgba(247,247,248,0.85) !important; }
+  .bg-surface-900\/50 { background-color: rgba(255,255,255,0.9) !important; }
+  .bg-surface-900\/80 { background-color: rgba(255,255,255,0.9) !important; }
+  .bg-surface-950\/30 { background-color: rgba(247,247,248,0.5) !important; }
+  .border-surface-800 { border-color: #e4e4e7 !important; }
+  .border-surface-700 { border-color: #d4d4d8 !important; }
+  .border-accent\/20 { border-color: rgba(16,185,129,0.25) !important; }
+  .border-red-500\/20 { border-color: rgba(239,68,68,0.25) !important; }
+  .border-dashed { border-color: #d4d4d8 !important; }
+  .text-surface-50 { color: #111114 !important; }
+  .text-surface-100 { color: #1a1a1e !important; }
+  .text-surface-200 { color: #3f3f46 !important; }
+  .text-surface-300 { color: #52525b !important; }
+  .text-surface-400 { color: #71717a !important; }
+  .text-surface-500 { color: #a1a1aa !important; }
+  .hover\:bg-surface-800:hover { background-color: #ececef !important; }
+  .hover\:bg-surface-700:hover { background-color: #d4d4d8 !important; }
+  .hover\:bg-surface-800\/50:hover { background-color: #ececef !important; }
+  .hover\:border-surface-700:hover { border-color: #a1a1aa !important; }
+  .hover\:border-surface-500:hover { border-color: #71717a !important; }
+  .hover\:border-accent\/20:hover { border-color: rgba(16,185,129,0.4) !important; }
+  .hover\:text-surface-50:hover { color: #111114 !important; }
+  .hover\:text-surface-300:hover { color: #3f3f46 !important; }
+  .fixed.left-0.bg-surface-900.border-surface-800 {
+    background-color: #ffffff !important;
+    border-color: #e4e4e7 !important;
+  }
+  .bg-accent\/10 { background-color: rgba(16,185,129,0.08) !important; }
+  .animate-pulse.bg-surface-800 {
+    background: linear-gradient(90deg, #f4f4f5 25%, #e4e4e7 50%, #f4f4f5 75%) !important;
+    background-size: 200% 100% !important;
+  }
+  .border-dashed { border-color: #d4d4d8 !important; }
+  .border-dashed.dragover { border-color: #10b981 !important; background: rgba(16,185,129,0.04) !important; }
+  ::-webkit-scrollbar-thumb { background: #c4c4c8 !important; }
+  ::-webkit-scrollbar-thumb:hover { background: #a1a1aa !important; }
+  input, select, textarea {
+    background-color: #ffffff !important;
+    border-color: #d4d4d8 !important;
+    color: #111114 !important;
+  }
+  input::placeholder, textarea::placeholder { color: #a1a1aa !important; }
+  input:focus, select:focus, textarea:focus {
+    border-color: #10b981 !important;
+    box-shadow: 0 0 0 3px rgba(16,185,129,0.15) !important;
+    outline: none !important;
+  }
+  .fixed.inset-0.bg-black\/60 { background-color: rgba(0,0,0,0.4) !important; }
+  .bg-surface-900.border-surface-700 {
+    background-color: #ffffff !important;
+    border-color: #e4e4e7 !important;
+  }
+  .card-glow::before {
+    background: linear-gradient(90deg, transparent, rgba(16,185,129,0.3), transparent) !important;
+  }
+  .toast {
+    background: rgba(255,255,255,0.95) !important;
+    backdrop-filter: blur(12px) !important;
+    border-color: rgba(0,0,0,0.08) !important;
+  }
+  .toast.success { color: #059669 !important; }
+  .toast.error { color: #dc2626 !important; }
+  .toast.info { color: #2563eb !important; }
+  .toast.success svg { color: #10b981 !important; }
+  .toast.error svg { color: #ef4444 !important; }
+  .toast.info svg { color: #3b82f6 !important; }
+}
+
+html.dark {
+  body {
+    background-color: #09090b;
+    color: #fafafa;
+  }
+}
