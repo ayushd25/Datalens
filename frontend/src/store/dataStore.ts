@@ -24,12 +24,13 @@ interface DataState {
   loading: boolean;
   uploadDataset: (file: File, onProgress?: (percent: number) => void) => Promise<any>;
   fetchDatasets: () => Promise<void>;
-  fetchDataset: (id: string) => Promise<void>; // <-- NEW
+  fetchDataset: (id: string) => Promise<void>;
+  deleteDataset: (id: string) => Promise<void>; // <-- ADDED THIS
 }
 
 export const useDataStore = create<DataState>((set) => ({
   datasets: [],
-  currentDataset: null, // <-- NEW
+  currentDataset: null,
   loading: false,
 
   uploadDataset: async (file: File, onProgress?: (percent: number) => void) => {
@@ -60,7 +61,6 @@ export const useDataStore = create<DataState>((set) => ({
     }
   },
 
-  // <-- NEW FUNCTION
   fetchDataset: async (id: string) => {
     set({ loading: true, currentDataset: null });
     try {
@@ -71,6 +71,19 @@ export const useDataStore = create<DataState>((set) => ({
       throw error;
     } finally {
       set({ loading: false });
+    }
+  },
+
+  // <-- ADDED THIS FUNCTION
+  deleteDataset: async (id: string) => {
+    try {
+      await api.delete(`/data/${id}`);
+      set((state) => ({
+        datasets: state.datasets.filter((d) => d._id !== id),
+      }));
+    } catch (error) {
+      console.error("Failed to delete dataset", error);
+      throw error;
     }
   },
 }));
