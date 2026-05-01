@@ -7,15 +7,21 @@ interface Column {
   type: string;
 }
 
+// This interface NOW perfectly matches your backend Dataset.js model
 interface Dataset {
   _id: string;
   userId: string;
   fileName: string;
+  originalSize: number; // <-- ADDED
   rowCount: number;
   columns: Column[];
   schema: Record<string, string>;
   stats: Record<string, any>;
+  data?: any[];          // Optional, usually excluded in list views
+  previewRows?: number;  // Optional
+  version?: number;      // Optional
   createdAt: string;
+  updatedAt?: string;    // Optional
 }
 
 interface DataState {
@@ -25,7 +31,7 @@ interface DataState {
   uploadDataset: (file: File, onProgress?: (percent: number) => void) => Promise<any>;
   fetchDatasets: () => Promise<void>;
   fetchDataset: (id: string) => Promise<void>;
-  deleteDataset: (id: string) => Promise<void>; // <-- ADDED THIS
+  deleteDataset: (id: string) => Promise<void>;
 }
 
 export const useDataStore = create<DataState>((set) => ({
@@ -74,7 +80,6 @@ export const useDataStore = create<DataState>((set) => ({
     }
   },
 
-  // <-- ADDED THIS FUNCTION
   deleteDataset: async (id: string) => {
     try {
       await api.delete(`/data/${id}`);
